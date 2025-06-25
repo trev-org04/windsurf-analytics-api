@@ -1,12 +1,58 @@
 import { NextRequest, NextResponse } from "next/server";
 
+interface DistinctUser {
+  value: string;
+}
+
+interface DistinctUsersPerDay {
+  day: string;
+  distinct_users: DistinctUser[];
+}
+
+interface CascadeRun {
+  day: string;
+  model?: string;
+  messagesSent?: number;
+  promptsUsed?: number;
+}
+
+interface QueryResult {
+  distinctUsersPerDay?: {
+    distinctUsersPerDay: DistinctUsersPerDay[];
+  };
+  cascadeRuns?: {
+    cascadeRuns: CascadeRun[];
+  };
+}
+
+interface ApiResponseData {
+  queryResults: QueryResult[];
+}
+
+interface RequestBody {
+  query_requests: {
+    data_source?: string;
+    selections?: {
+      field: string;
+      name: string;
+      aggregation_function: string;
+    }[];
+    cascade_runs?: Record<string, unknown>;
+    filters?: {
+      name: string;
+      value: string;
+      filter: string;
+    }[];
+  }[];
+}
+
 const ANALYTICS_API_BASE_URL = process.env.NEXT_PUBLIC_ANALYTICS_API_BASE_URL;
 const CASCADE_ANALYTICS_API_BASE_URL =
   process.env.NEXT_PUBLIC_CASCADE_ANALYTICS_API_BASE_URL;
 
 // note: not used in this file, but left in for future expansion
-const USER_ANALYTICS_API_BASE_URL =
-  process.env.NEXT_PUBLIC_USER_ANALYTICS_API_BASE_URL;
+// const USER_ANALYTICS_API_BASE_URL =
+//   process.env.NEXT_PUBLIC_USER_ANALYTICS_API_BASE_URL;
 
 // A mapping of query options to specific API endpoints to prevent unwanted API calls.
 const QUERY_ENDPOINT_MAP: Record<
@@ -15,8 +61,8 @@ const QUERY_ENDPOINT_MAP: Record<
     endpoint: string;
     method: string;
     headers: { [key: string]: string };
-    body: any;
-    formattingFunction?: (data: any) => any;
+    body: RequestBody;
+    formattingFunction?: (data: ApiResponseData) => Record<string, unknown>;
   }
 > = {
   option1: {
@@ -71,7 +117,7 @@ const QUERY_ENDPOINT_MAP: Record<
     body: {
       query_requests: [
         {
-          cascade_lines: {},
+          cascade_runs: {},
         },
       ],
     },
@@ -87,22 +133,24 @@ const QUERY_ENDPOINT_MAP: Record<
         },
       ],
     },
-    formattingFunction: (data: any) => {
-      const runs = data.queryResults[0].cascadeRuns.cascadeRuns;
+    formattingFunction: (data: ApiResponseData) => {
+      const runs = data.queryResults[0].cascadeRuns?.cascadeRuns;
       const modelsPerDay: { [day: string]: Set<string> } = {};
 
-      runs.forEach(({ day, model }: { day: string; model: string }) => {
-        // Remove/don't count empty values
-        if (!day || !model) return;
+      if (runs) {
+        runs.forEach(({ day, model }) => {
+          // Remove/don't count empty values
+          if (!day || !model) return;
 
-        // Create a set for each day if one does not exist
-        if (!modelsPerDay[day]) {
-          modelsPerDay[day] = new Set();
-        }
+          // Create a set for each day if one does not exist
+          if (!modelsPerDay[day]) {
+            modelsPerDay[day] = new Set();
+          }
 
-        // Add the model to the set
-        modelsPerDay[day].add(model);
-      });
+          // Add the model to the set
+          modelsPerDay[day].add(model);
+        });
+      }
 
       // Create new object of (day, model_count) entries
       const modelCountsPerDay = Object.fromEntries(
@@ -130,12 +178,12 @@ const QUERY_ENDPOINT_MAP: Record<
         },
       ],
     },
-    formattingFunction: (data: any) => {
-      const runs = data.queryResults[0].cascadeRuns.cascadeRuns;
+    formattingFunction: (data: ApiResponseData) => {
+      const runs = data.queryResults[0].cascadeRuns?.cascadeRuns;
       const messagesPerDay: { [day: string]: number } = {};
 
-      runs.forEach(
-        ({ day, messagesSent }: { day: string; messagesSent: number }) => {
+      if (runs) {
+        runs.forEach(({ day, messagesSent }) => {
           // Remove/don't count empty values
           if (!day || !messagesSent) return;
 
@@ -145,8 +193,8 @@ const QUERY_ENDPOINT_MAP: Record<
           } else {
             messagesPerDay[day] += Number(messagesSent);
           }
-        }
-      );
+        });
+      }
 
       return { messagesPerDay };
     },
@@ -162,12 +210,12 @@ const QUERY_ENDPOINT_MAP: Record<
         },
       ],
     },
-    formattingFunction: (data: any) => {
-      const runs = data.queryResults[0].cascadeRuns.cascadeRuns;
+    formattingFunction: (data: ApiResponseData) => {
+      const runs = data.queryResults[0].cascadeRuns?.cascadeRuns;
       const creditSpendPerDay: { [day: string]: number } = {};
 
-      runs.forEach(
-        ({ day, promptsUsed }: { day: string; promptsUsed: number }) => {
+      if (runs) {
+        runs.forEach(({ day, promptsUsed }) => {
           // Remove/don't count empty values
           if (!day || !promptsUsed) return;
 
@@ -177,8 +225,8 @@ const QUERY_ENDPOINT_MAP: Record<
           } else {
             creditSpendPerDay[day] += Number(promptsUsed);
           }
-        }
-      );
+        });
+      }
 
       return { creditSpendPerDay };
     },
@@ -194,12 +242,12 @@ const QUERY_ENDPOINT_MAP: Record<
         },
       ],
     },
-    formattingFunction: (data: any) => {
-      const runs = data.queryResults[0].cascadeRuns.cascadeRuns;
+    formattingFunction: (data: ApiResponseData) => {
+      const runs = data.queryResults[0].cascadeRuns?.cascadeRuns;
       const creditSpendPerDay: { [day: string]: number } = {};
 
-      runs.forEach(
-        ({ day, promptsUsed }: { day: string; promptsUsed: number }) => {
+      if (runs) {
+        runs.forEach(({ day, promptsUsed }) => {
           // Remove/don't count empty values
           if (!day || !promptsUsed) return;
 
@@ -209,8 +257,8 @@ const QUERY_ENDPOINT_MAP: Record<
           } else {
             creditSpendPerDay[day] += Number(promptsUsed);
           }
-        }
-      );
+        });
+      }
 
       return { creditSpendPerDay };
     },
@@ -236,7 +284,13 @@ export async function POST(req: NextRequest) {
     }
 
     // Create a mutable copy of the body and insert the service key
-    const requestBody = { service_key: serviceKey, ...endpoint.body };
+    const requestBody: RequestBody & {
+      service_key: string;
+      emails?: string[];
+    } = {
+      service_key: serviceKey,
+      ...endpoint.body,
+    };
     if (emails.length > 0) {
       requestBody.emails = emails;
     }
