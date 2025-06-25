@@ -6,7 +6,10 @@ export default function Home() {
   const [query, setQuery] = useState("");
   const [serviceKey, setServiceKey] = useState("");
   const [output, setOutput] = useState("");
-  const [formattedOutput, setFormattedOutput] = useState<Record<string, unknown> | null>(null);
+  const [formattedOutput, setFormattedOutput] = useState<Record<
+    string,
+    unknown
+  > | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isRequestOpen, setIsRequestOpen] = useState(true);
   const [requestBody, setRequestBody] = useState("");
