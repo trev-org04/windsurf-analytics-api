@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const ANALYTICS_API_BASE_URL = "https://server.codeium.com/api/v1/Analytics";
+const ANALYTICS_API_BASE_URL = process.env.NEXT_PUBLIC_ANALYTICS_API_BASE_URL;
 const CASCADE_ANALYTICS_API_BASE_URL =
-  "https://server.codeium.com/api/v1/CascadeAnalytics";
+  process.env.NEXT_PUBLIC_CASCADE_ANALYTICS_API_BASE_URL;
+
+// note: not used in this file, but left in for future expansion
 const USER_ANALYTICS_API_BASE_URL =
-  "https://server.codeium.com/api/v1/UserPageAnalytics";
+  process.env.NEXT_PUBLIC_USER_ANALYTICS_API_BASE_URL;
 
 // A mapping of query options to specific API endpoints to prevent unwanted API calls.
 const QUERY_ENDPOINT_MAP: Record<
@@ -18,7 +20,7 @@ const QUERY_ENDPOINT_MAP: Record<
   }
 > = {
   option1: {
-    endpoint: ANALYTICS_API_BASE_URL,
+    endpoint: ANALYTICS_API_BASE_URL!,
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: {
@@ -37,7 +39,7 @@ const QUERY_ENDPOINT_MAP: Record<
     },
   },
   option2: {
-    endpoint: ANALYTICS_API_BASE_URL,
+    endpoint: ANALYTICS_API_BASE_URL!,
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: {
@@ -63,7 +65,7 @@ const QUERY_ENDPOINT_MAP: Record<
     },
   },
   option3: {
-    endpoint: CASCADE_ANALYTICS_API_BASE_URL,
+    endpoint: CASCADE_ANALYTICS_API_BASE_URL!,
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: {
@@ -75,7 +77,7 @@ const QUERY_ENDPOINT_MAP: Record<
     },
   },
   option4: {
-    endpoint: CASCADE_ANALYTICS_API_BASE_URL,
+    endpoint: CASCADE_ANALYTICS_API_BASE_URL!,
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: {
@@ -118,7 +120,7 @@ const QUERY_ENDPOINT_MAP: Record<
     },
   },
   option5: {
-    endpoint: CASCADE_ANALYTICS_API_BASE_URL,
+    endpoint: CASCADE_ANALYTICS_API_BASE_URL!,
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: {
@@ -150,7 +152,7 @@ const QUERY_ENDPOINT_MAP: Record<
     },
   },
   option6: {
-    endpoint: CASCADE_ANALYTICS_API_BASE_URL,
+    endpoint: CASCADE_ANALYTICS_API_BASE_URL!,
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: {
@@ -182,7 +184,7 @@ const QUERY_ENDPOINT_MAP: Record<
     },
   },
   option7: {
-    endpoint: CASCADE_ANALYTICS_API_BASE_URL,
+    endpoint: CASCADE_ANALYTICS_API_BASE_URL!,
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: {
